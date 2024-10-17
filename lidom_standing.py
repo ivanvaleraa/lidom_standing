@@ -1,7 +1,6 @@
 ##pip install prettytable
 import os
 import requests
-import streamlit as st
 from bs4 import BeautifulSoup
 from prettytable import PrettyTable
 
@@ -44,4 +43,4 @@ standing.sortby = 'PCT'
 standing.align['Equipo'] = 'l'
 standing.align['PCT'] = 'r'
 standing.reversesort = True
-st.write(standing)
+print(standing)
