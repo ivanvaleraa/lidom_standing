@@ -9,7 +9,7 @@ from decimal import Decimal
 
 
 
-st.title(":blue[LI]:red[DOM] Temporada 2024-2025 :flag-do::baseball:")
+st.title(":blue[LI]:red[DOM] Temporada 2024-2025 :flag-do: :baseball:")
 st.header("Tabla de Posiciones")
 
 url = 'https://estadisticas.lidom.com/'
