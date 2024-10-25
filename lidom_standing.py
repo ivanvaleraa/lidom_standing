@@ -2,73 +2,42 @@
 import os
 import requests
 import streamlit as st
-from bs4 import BeautifulSoup
-from prettytable import PrettyTable
+from bs4 import BeautifulSoup, Comment
 import pandas as pd
-from decimal import Decimal
+from io import StringIO
+
+st.set_page_config(layout="wide")
 
 
+bref = 'https://www.baseball-reference.com/register/league.cgi?id=3d6041f6'
+r = requests.get(bref)
+soup = BeautifulSoup(r.content, "html.parser")
 
 st.title(":blue[LI]:red[DOM] Temporada 2024-2025 :flag-do::baseball:")
-st.header("Tabla de Posiciones")
-
-url = 'https://estadisticas.lidom.com/'
-url2 = 'https://estadisticas.lidom.com/Colectivo'
-respuesta = requests.get(url)
-respuesta2 = requests.get(url2)
-
-columns_standing = ["Equipo", "JJ", "G - P", "PCT", "JD","Casa", "Ruta", "Racha", "U10"]
-columns_offensive_stats = ["Equipo","AVG", "OBP", "SLG", "OPS", "K%", "BB%"]
-rows_standing = []
-rows_offensive_stats = []
-total_teams = 6
+st.header("Estadísticas por Equipo")
+st.subheader("Tabla de Posiciones")
 
 ##aqui ponemos las estadisticas basicas
-if respuesta.status_code == 200:
-  soup = BeautifulSoup(respuesta.text, 'html.parser')
-  soup2 = BeautifulSoup(respuesta2.text, 'html.parser')
-
-  for x in range(total_teams):
-    x += 1
-    jj = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[1].get_text().strip()
-    team_name = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[0].find_all('a')[0].get_text().strip()
-    wins_loses = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[2].get_text().strip() + " - " + soup.find_all('table')[1].find_all('tr')[x].find_all('td')[3].get_text().strip()
-    pct = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[4].get_text().strip()
-    gb = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[5].get_text().strip()
-    casa = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[6].get_text().strip()
-    ruta = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[7].get_text().strip()
-    racha = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[8].get_text().strip()
-    u10 = soup.find_all('table')[1].find_all('tr')[x].find_all('td')[9].get_text().strip()
-
-    ##segundo
-    team_name = soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[0].find_all('a')[0].get_text().strip()
-
-    ab = int(soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[2].get_text().strip())
-    k = int(soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[11].get_text().strip())
-    bb = int(soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[9].get_text().strip())
-
-    avg = (soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[15].get_text().strip())
-    obp = (soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[16].get_text().strip())
-    slg = (soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[17].get_text().strip())
-    ops = (soup2.find_all('table')[1].find_all('tr')[x].find_all('td')[18].get_text().strip())
-
-    pa = ab + bb
-
-    k_rate = ((k/pa)*100)
-    bb_rate = ((bb/pa)*100)
-
-
-    k_rate = (format(k_rate,'.1f'))+"%"
-    bb_rate = (format(bb_rate,'.1f'))+"%"
-
-    rows_standing.append([team_name, jj, wins_loses, pct, gb, casa, ruta, racha, u10])
-    rows_offensive_stats.append([team_name,avg,obp,slg,ops,k_rate,bb_rate])
-
-df_standing = pd.DataFrame(rows_standing, columns=columns_standing)
-df_offensive_stats = pd.DataFrame(rows_offensive_stats, columns=columns_offensive_stats)
-
-
-
-st.dataframe(df_standing, width=2000, hide_index=True)
-st.header("Estadísticas Ofensivas")
-st.dataframe(df_offensive_stats, width=2000, hide_index=True)
+if r.status_code == 200:
+  standing = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_standings_pitching"' in soup][0])[0])
+  standing['J'] = standing['W']+standing['L']
+  standing = standing[['Tm','J','W','L','W-L%','GB']]
+  standing = standing.rename(columns={'Tm':'Equipo','W':'G','L':'P','W-L%':'Pct%','GB':'Dif'})
+  formatted_standing = standing.style.format({"Pct%": "{:.3f}".format})
+  st.dataframe(formatted_standing, width=2000, hide_index=True)
+  offensive_stats = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_league_batting"' in soup][0])[0])
+  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G'], axis=1)
+  offensive_stats['K%'] = offensive_stats['SO']/offensive_stats['PA']
+  offensive_stats['BB%'] = offensive_stats['BB']/offensive_stats['PA']
+  offensive_stats = offensive_stats.rename(columns={'Tm':'Equipo','R/G':'C/J'})
+  offensive_stats = offensive_stats[:-1]
+  mapper =  {'C/J': '{0:.2f}',
+           'BA': '{0:.3f}',
+           'OBP': '{0:.3f}',
+           'SLG': '{0:.3f}',
+           'OPS': '{0:.3f}',
+           'K%': '{0:.2f}%',
+           'BB%': '{0:.2f}%'}
+  formatted_offensive_stats = offensive_stats.style.format(mapper)
+  st.subheader("Estadísticas Ofensivas")
+  st.dataframe(formatted_offensive_stats, width=2000, hide_index=True)
