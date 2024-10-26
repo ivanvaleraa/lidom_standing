@@ -4,6 +4,7 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup, Comment
 import pandas as pd
+from io import StringIO
 
 st.set_page_config(layout="wide")
 
