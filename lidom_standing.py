@@ -30,8 +30,9 @@ if r.status_code == 200:
   offensive_stats['K%'] = offensive_stats['SO']/offensive_stats['PA']
   offensive_stats['BB%'] = offensive_stats['BB']/offensive_stats['PA']
   offensive_stats = offensive_stats.rename(columns={'Tm':'Equipo','R/G':'C/J'})
-  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G','PA','H','2B','3B','BB','SO'], axis=1)
+  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G','AB','H','2B','3B','BB','SO','OPS'], axis=1)
   offensive_stats = offensive_stats[:-1]
+  offensive_stats = offensive_stats[['Equipo','C/J','PA','HR','R','RBI','BB%','K%','BA','OBP','SLG']]
   mapper =  {'C/J': '{0:.2f}',
            'BA': '{0:.3f}',
            'OBP': '{0:.3f}',
