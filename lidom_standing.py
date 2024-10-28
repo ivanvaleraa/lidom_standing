@@ -26,10 +26,11 @@ if r.status_code == 200:
   formatted_standing = standing.style.format({"Pct%": "{:.3f}".format})
   st.dataframe(formatted_standing, width=2000, hide_index=True)
   offensive_stats = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_league_batting"' in soup][0])[0])
-  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G'], axis=1)
+  
   offensive_stats['K%'] = offensive_stats['SO']/offensive_stats['PA']
   offensive_stats['BB%'] = offensive_stats['BB']/offensive_stats['PA']
   offensive_stats = offensive_stats.rename(columns={'Tm':'Equipo','R/G':'C/J'})
+  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G','PA','H','2B','3B','BB','SO'], axis=1)
   offensive_stats = offensive_stats[:-1]
   mapper =  {'C/J': '{0:.2f}',
            'BA': '{0:.3f}',
