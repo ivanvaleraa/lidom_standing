@@ -88,6 +88,7 @@ if r.status_code == 200:
   #cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#648FFF', '#FFFFFF', '#FFB000'])
   cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#f81707', 'white', 'blue'])
   formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['ERA'], cmap=cmap_sum,vmin=2.71,vmax=4.81)
+  formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['FIP'], cmap=cmap_sum,vmin=2.92,vmax=4.35)
 
   st.dataframe(formatted_pitching_stats, width=2000, hide_index=True)
  
