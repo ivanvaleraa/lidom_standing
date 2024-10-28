@@ -18,6 +18,9 @@ st.title(":blue[LI]:red[DOM] Temporada 2024-2025 :flag-do::baseball:")
 st.header("Estadísticas por Equipo")
 st.subheader("Tabla de Posiciones")
 
+
+cmap_sum_revert = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#f81707', 'white', 'blue'])
+cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['blue', 'white', '#f81707'])
 ##aqui ponemos las estadisticas basicas
 if r.status_code == 200:
   standing = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_standings_pitching"' in soup][0])[0])
@@ -25,27 +28,12 @@ if r.status_code == 200:
   standing = standing[['Tm','J','W','L','W-L%','GB']]
   standing = standing.rename(columns={'Tm':'Equipo','W':'G','L':'P','W-L%':'Pct%','GB':'Dif'})
   formatted_standing = standing.style.format({"Pct%": "{:.3f}".format})
+
+  formatted_standing = formatted_standing.background_gradient(subset=['Pct%'], cmap=cmap_sum,vmin=.222,vmax=.700)
   st.dataframe(formatted_standing, width=2000, hide_index=True)
 
 
-  offensive_stats = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_league_batting"' in soup][0])[0])
-  offensive_stats['K%'] = offensive_stats['SO']/offensive_stats['PA']
-  offensive_stats['BB%'] = offensive_stats['BB']/offensive_stats['PA']
-  offensive_stats = offensive_stats.rename(columns={'Tm':'Equipo','R/G':'C/J'})
-  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G','AB','H','2B','3B','BB','SO','OPS'], axis=1)
-  offensive_stats = offensive_stats[:-1]
-  offensive_stats = offensive_stats[['Equipo','C/J','PA','HR','R','RBI','BB%','K%','BA','OBP','SLG']]
-  mapper =  {'C/J': '{0:.2f}',
-           'BA': '{0:.3f}',
-           'OBP': '{0:.3f}',
-           'SLG': '{0:.3f}',
-           'OPS': '{0:.3f}',
-           'K%': '{0:.2f}%',
-           'BB%': '{0:.2f}%'}
-  formatted_offensive_stats = offensive_stats.style.format(mapper)
-  st.subheader("Estadísticas Ofensivas")
-  st.dataframe(formatted_offensive_stats, width=2000, hide_index=True)
-  
+
   st.subheader("Estadísticas de Pitcheo")
 
   def FIP_Constant(stats):
@@ -84,12 +72,30 @@ if r.status_code == 200:
            'HR9': '{0:.1f}',
            'FIP': '{0:.2f}'}
   
-
-  #cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#648FFF', '#FFFFFF', '#FFB000'])
-  cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#f81707', 'white', 'blue'])
-  formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['ERA'], cmap=cmap_sum,vmin=2.71,vmax=4.81)
-  formatted_pitching_stats = formatted_pitching_stats.background_gradient(subset=['FIP'], cmap=cmap_sum,vmin=2.92,vmax=4.35)
+  formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['ERA'], cmap=cmap_sum_revert,vmin=2.71,vmax=4.81)
+  formatted_pitching_stats = formatted_pitching_stats.background_gradient(subset=['FIP'], cmap=cmap_sum_revert,vmin=2.92,vmax=4.35)
 
   st.dataframe(formatted_pitching_stats, width=2000, hide_index=True)
+
+
+  offensive_stats = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_league_batting"' in soup][0])[0])
+  offensive_stats['K%'] = offensive_stats['SO']/offensive_stats['PA']
+  offensive_stats['BB%'] = offensive_stats['BB']/offensive_stats['PA']
+  offensive_stats = offensive_stats.rename(columns={'Tm':'Equipo','R/G':'C/J'})
+  offensive_stats = offensive_stats.drop(['Aff','BatAge','TB','GDP','HBP','SH','SF','IBB','SB','CS','G','AB','H','2B','3B','BB','SO','OPS'], axis=1)
+  offensive_stats = offensive_stats[:-1]
+  offensive_stats = offensive_stats[['Equipo','C/J','PA','HR','R','RBI','BB%','K%','BA','OBP','SLG']]
+  mapper =  {'C/J': '{0:.2f}',
+           'BA': '{0:.3f}',
+           'OBP': '{0:.3f}',
+           'SLG': '{0:.3f}',
+           'OPS': '{0:.3f}',
+           'K%': '{0:.2f}%',
+           'BB%': '{0:.2f}%'}
+  formatted_offensive_stats = offensive_stats.style.format(mapper)
+  st.subheader("Estadísticas Ofensivas")
+  st.dataframe(formatted_offensive_stats, width=2000, hide_index=True)
+  
+  
  
   
