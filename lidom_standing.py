@@ -15,6 +15,7 @@ r = requests.get(bref)
 soup = BeautifulSoup(r.content, "html.parser")
 
 st.title(":blue[LI]:red[DOM] Temporada 2024-2025 :flag-do::baseball:")
+st.markdown("Por: **Ivan Valera** :curly_haired_man:")
 st.header("Estadísticas por Equipo")
 st.subheader("Tabla de Posiciones")
 
