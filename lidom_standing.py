@@ -26,11 +26,15 @@ cmap_sum = matplotlib.colors.LinearSegmentedColormap.from_list("", ['blue', 'whi
 if r.status_code == 200:
   standing = pd.DataFrame(pd.read_html([StringIO(soup.extract()) for soup in soup.find_all(string=lambda text: isinstance(text, Comment)) if 'id="div_standings_pitching"' in soup][0])[0])
   standing['J'] = standing['W']+standing['L']
+  min_pct = standing['W-L%'].min()
+  max_pct = standing['W-L%'].max()
   standing = standing[['Tm','J','W','L','W-L%','GB']]
   standing = standing.rename(columns={'Tm':'Equipo','W':'G','L':'P','W-L%':'Pct%','GB':'Dif'})
   formatted_standing = standing.style.format({"Pct%": "{:.3f}".format})
 
-  formatted_standing = formatted_standing.background_gradient(subset=['Pct%'], cmap=cmap_sum,vmin=.222,vmax=.700)
+ 
+
+  formatted_standing = formatted_standing.background_gradient(subset=['Pct%'], cmap=cmap_sum,vmin=min_pct,vmax=max_pct)
   st.dataframe(formatted_standing, width=2000, hide_index=True)
 
 
@@ -53,13 +57,18 @@ if r.status_code == 200:
   FIPc = FIP_Constant(pitching_stats)
   st.markdown("Constante FIP: **"  + FIPc + "**")
 
-  #FIP Formula
-  #FIP = ((13*HR)+(3*(BB+HBP))-(2*K))/IP + constant
   pitching_stats['FIP'] = (((13*pitching_stats['HR'])+(3*(pitching_stats['BB']+pitching_stats['HBP']))-(2*pitching_stats['SO']))/pitching_stats['IP']) + float(FIPc)
   pitching_stats['K%'] = pitching_stats['SO']/pitching_stats['BF']
   pitching_stats['BB%'] = pitching_stats['BB']/pitching_stats['BF']
   pitching_stats = pitching_stats.rename(columns={'Tm':'Equipo'})
   pitching_stats = pitching_stats.drop(['Aff','PAge','W','L','W-L%','G','GS','GF','CG','SHO','H','R','ER','IBB','WP','BK','R/G','H9','SO/W','SV'], axis=1)
+
+  min_era = pitching_stats['ERA'].min()
+  max_era = pitching_stats['ERA'].max()
+
+  min_fip = pitching_stats['FIP'].min()
+  max_fip = pitching_stats['FIP'].max()
+
   pitching_stats = pitching_stats[:-1]
   pitching_stats = pitching_stats[['Equipo','IP','BF','ERA','FIP','RA9','SO9','BB9','HR9','WHIP','BB%','K%']]
   mapper =  {'ERA': '{0:.2f}',
@@ -73,8 +82,8 @@ if r.status_code == 200:
            'HR9': '{0:.1f}',
            'FIP': '{0:.2f}'}
   
-  formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['ERA'], cmap=cmap_sum_revert,vmin=2.71,vmax=4.81)
-  formatted_pitching_stats = formatted_pitching_stats.background_gradient(subset=['FIP'], cmap=cmap_sum_revert,vmin=2.92,vmax=4.35)
+  formatted_pitching_stats = pitching_stats.style.format(mapper).background_gradient(subset=['ERA'], cmap=cmap_sum_revert,vmin=min_era,vmax=max_era)
+  formatted_pitching_stats = formatted_pitching_stats.background_gradient(subset=['FIP'], cmap=cmap_sum_revert,vmin=min_fip,vmax=max_fip)
 
   st.dataframe(formatted_pitching_stats, width=2000, hide_index=True)
 
